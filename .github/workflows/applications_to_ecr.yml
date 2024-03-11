@@ -43,7 +43,7 @@ jobs:
           cd app_code/
           ls -ltra
           # Docker build command
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile_mysql .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       # Runs a set of commands using the runners shell
       - name: Push image webapp to Amazon ECR
