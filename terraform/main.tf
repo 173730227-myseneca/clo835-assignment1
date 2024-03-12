@@ -97,3 +97,59 @@ resource "aws_ecr_repository" "mysql" {
     scan_on_push = true
   }
 }
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+data "aws_subnet" "default" {
+  for_each = toset(data.aws_subnets.default.ids)
+  id       = each.value
+}
+
+resource "aws_lb_target_group" "tg_app" {
+ name     = "target-group-webapp"
+ port     = 8080
+ protocol = "HTTP"
+ vpc_id   = data.aws_vpc.default.id
+}
+
+resource "aws_lb_target_group_attachment" "tg_attachment_blue" {
+ target_group_arn = aws_lb_target_group.tg_app.arn
+ target_id        = aws_instance.assignment1_ec2.id
+ port             = 8081
+}
+
+resource "aws_lb_target_group_attachment" "tg_attachment_pink" {
+ target_group_arn = aws_lb_target_group.tg_app.arn
+ target_id        = aws_instance.assignment1_ec2.id
+ port             = 8082
+}
+
+resource "aws_lb_target_group_attachment" "tg_attachment_lime" {
+ target_group_arn = aws_lb_target_group.tg_app.arn
+ target_id        = aws_instance.assignment1_ec2.id
+ port             = 8083
+}
+
+resource "aws_lb" "app_alb" {
+ name               = "app-alb"
+ internal           = false
+ load_balancer_type = "application"
+ security_groups    = [module.ec2_http_sg.security_group_id, module.ec2_ssh_sg.security_group_id]
+ subnets            = [for s in data.aws_subnet.default : s.id]
+}
+
+resource "aws_lb_listener" "alb_listener" {
+ load_balancer_arn = aws_lb.app_alb.arn
+ port              = "8080"
+ protocol          = "HTTP"
+
+ default_action {
+   type             = "forward"
+   target_group_arn = aws_lb_target_group.tg_app.arn
+ }
+}
