@@ -33,6 +33,9 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+# Ignore Terraform lock
+.terraform.lock.hcl
+
 # Ignore SSH key
 assignment1
 assignment1.pub
